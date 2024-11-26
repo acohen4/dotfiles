@@ -9,16 +9,11 @@
 ;; Highlight current line.
 (global-hl-line-mode t)
 
+;; Display line numbers
+(global-display-line-numbers-mode 1)
+
 ;; Use `command` as `meta` in macOS.
 (setq mac-command-modifier 'meta)
-
-;; Do not use `init.el` for `custom-*` code - use `custom-file.el`.
-(setq custom-file "~/.emacs.d/custom-file.el")
-
-;; Assuming that the code in custom-file is execute before the code
-;; ahead of this line is not a safe assumption. So load this file
-;; proactively.
-(load-file custom-file)
 
 ;; Require and initialize `package`.
 (require 'package)
@@ -33,7 +28,7 @@
   (package-install 'use-package))
 
 ;; Additional packages and their configurations
-;;(load-theme 'spacemacs-dark t)
+(load-theme 'spacemacs-dark t)
 (use-package spacemacs-theme
   :defer t
   ;; Use the `spacemacs-dark` theme.
@@ -45,6 +40,7 @@
   (setq spacemacs-theme-comment-italic t))
 
 
+(require 'company)
 (use-package company
   ;; Navigate in completion minibuffer with `C-n` and `C-p`.
   :bind (:map company-active-map
@@ -58,6 +54,7 @@
   (global-company-mode t))
 
 ;; Git integration for Emacs
+(require 'magit)
 (use-package magit
   :ensure t
   :bind ("C-x g" . magit-status))
@@ -67,56 +64,13 @@
 (setq ido-everywhere t)
 
 (ido-mode 1)
-;; (require 'ido)
+(require 'ido)
 
 ;; Built-in project package
 (require 'project)
 (global-set-key (kbd "C-x p f") #'project-find-file)
 
-(global-display-line-numbers-mode 1)
-
 (setq ns-command-modifier 'meta)
-
-;; web-mode
-(use-package web-mode
-  :ensure t
-  :mode (("\\.js\\'" . web-mode)
-	 ("\\.jsx\\'" .  web-mode)
-	 ("\\.ts\\'" . web-mode)
-	 ("\\.tsx\\'" . web-mode)
-	 ("\\.html\\'" . web-mode))
-  :config
-  (setq web-mode-markup-indent-offset 2)
-  (setq web-mode-code-indent-offset 2)
-  (setq web-mode-css-indent-offset 2)
-  :commands web-mode)
-
-(require 'prettier-js)
-(add-hook 'web-mode-hook 'prettier-js-mode)
-
-
-;; lsp-mode
-(setq lsp-log-io nil) ;; Don't log everything = speed
-(setq lsp-keymap-prefix "C-c l")
-(setq lsp-restart 'auto-restart)
-
-(use-package lsp-mode
-  :ensure t
-  :hook (
-	 (web-mode . lsp-deferred)
-	 (lsp-mode . lsp-enable-which-key-integration)
-	 (go-mode . lsp-deferred)
-	 (go-mode . yas-minor-mode)
-	 )
-  :commands lsp-deferred)
-
-(use-package lsp-ui
-  :ensure t
-  :config
-  (setq lsp-ui-sideline-show-diagnostics t)
-  (setq lsp-ui-sideline-show-hover t)
-  (setq lsp-ui-sideline-show-code-actions t)
-  :commands lsp-ui-mode)
 
 ;; --------------------------------------------
 ;; Markdown https://www.emacswiki.org/emacs/MarkdownMode
@@ -128,18 +82,32 @@
 			nil t))))
 ;; --------------------------------------------
 
-(add-hook 'after-init-hook 'global-company-mode)
+(use-package eglot
+  :ensure t
+  :defer t
+  :hook ((python-mode . eglot-ensure)
+         (go-mode . eglot-ensure))
+  :config
+  (add-to-list 'eglot-server-programs '(go-mode . ("gopls"))))
 
 ;; json-mode
 (use-package json-mode
   :ensure t)
 
-;; Go - lsp-mode
-;; Set up before-save hooks to format buffer and add/delete imports.
-(defun lsp-go-install-save-hooks ()
-  (add-hook 'before-save-hook #'lsp-format-buffer t t)
-  (add-hook 'before-save-hook #'lsp-organize-imports t t))
-(add-hook 'go-mode-hook #'lsp-go-install-save-hooks)
-
 ;; Global Keys
+;; deadgrep - must have ripgrep installed
+(require 'deadgrep)
 (global-set-key (kbd "C-c C-s") 'deadgrep)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(flycheck elpy go-mode yasnippet use-package spacemacs-theme magit json-mode deadgrep company)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
