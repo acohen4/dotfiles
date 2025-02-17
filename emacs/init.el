@@ -38,14 +38,14 @@
   (setq spacemacs-theme-comment-bg nil)
   ;; Comments should appear in italics.
   (setq spacemacs-theme-comment-italic t))
-
+(load-theme 'spacemacs-dark t)
 
 (require 'company)
 (use-package company
   ;; Navigate in completion minibuffer with `C-n` and `C-p`.
   :bind (:map company-active-map
-         ("C-n" . company-select-next)
-         ("C-p" . company-select-previous))
+              ("C-n" . company-select-next)
+              ("C-p" . company-select-previous))
   :config
   ;; Provide instant autocompletion.
   (setq company-idle-delay 0.3)
@@ -82,17 +82,48 @@
 			nil t))))
 ;; --------------------------------------------
 
+(use-package typescript-mode
+  :ensure t
+  :mode ("\\.ts\\'" "\\.tsx\\'")
+  :hook ((typescript-mode . eglot-ensure)))
+
+(define-derived-mode typescript-tsx-mode typescript-mode "TypeScript[TSX]")
+(add-to-list 'auto-mode-alist '("\\.tsx\\'" . typescript-tsx-mode))
+
 (use-package eglot
   :ensure t
   :defer t
   :hook ((python-mode . eglot-ensure)
-         (go-mode . eglot-ensure))
+         (go-mode . eglot-ensure)
+         (typescript-mode . eglot-ensure)
+         (typescript-tsx-mode . eglot-ensure)
+         (js-mode . eglot-ensure)
+         (js2-mode . eglot-ensure))
   :config
-  (add-to-list 'eglot-server-programs '(go-mode . ("gopls"))))
+  (add-to-list 'eglot-server-programs
+               '(go-mode . ("gopls")))
+  (add-to-list 'eglot-server-programs
+               '((typescript-mode typescript-tsx-mode js-mode js2-mode)
+                 . ("typescript-language-server" "--stdio")))
+  
+  ;; Ensure .tsx files are associated with typescript-tsx-mode
+  (add-to-list 'auto-mode-alist '("\\.tsx\\'" . typescript-tsx-mode))
+  )
 
 ;; json-mode
 (use-package json-mode
   :ensure t)
+
+;; fly-check
+(use-package flycheck
+  :ensure t
+  :init (global-flycheck-mode))
+
+;; prettier - automatic formatting
+(use-package apheleia
+  :ensure t
+  :config
+  (apheleia-global-mode t))
 
 ;; Global Keys
 ;; deadgrep - must have ripgrep installed
@@ -104,7 +135,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(flycheck elpy go-mode yasnippet use-package spacemacs-theme magit json-mode deadgrep company)))
+   '(typespec-ts-mode js2-mode typescript-mode flycheck elpy go-mode yasnippet use-package spacemacs-theme magit json-mode deadgrep company)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
